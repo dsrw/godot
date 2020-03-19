@@ -7127,6 +7127,15 @@ void TextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_minimap_width", "width"), &TextEdit::set_minimap_width);
 	ClassDB::bind_method(D_METHOD("get_minimap_width"), &TextEdit::get_minimap_width);
 
+	ClassDB::bind_method(D_METHOD("set_indent_size", "size"), &TextEdit::set_indent_size);
+	ClassDB::bind_method(D_METHOD("get_indent_size"), &TextEdit::get_indent_size);
+
+	ClassDB::bind_method(D_METHOD("set_indent_using_spaces", "enabled"), &TextEdit::set_indent_using_spaces);
+	ClassDB::bind_method(D_METHOD("is_indent_using_spaces"), &TextEdit::is_indent_using_spaces);
+
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "indent_using_spaces"), "set_indent_using_spaces", "is_indent_using_spaces");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "indent_size", PROPERTY_HINT_RANGE, "0,8,1,or_greater"), "set_indent_size", "get_indent_size");
+
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "highlight_current_line"), "set_highlight_current_line", "is_highlight_current_line_enabled");
