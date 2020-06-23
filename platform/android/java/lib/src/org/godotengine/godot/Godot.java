@@ -30,6 +30,13 @@
 
 package org.godotengine.godot;
 
+import org.godotengine.godot.input.GodotEditText;
+import org.godotengine.godot.plugin.GodotPlugin;
+import org.godotengine.godot.plugin.GodotPluginRegistry;
+import org.godotengine.godot.utils.GodotNetUtils;
+import org.godotengine.godot.utils.PermissionsUtil;
+import org.godotengine.godot.xr.XRMode;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -61,11 +68,6 @@ import android.os.Messenger;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings.Secure;
-import android.support.annotation.CallSuper;
-import android.support.annotation.Keep;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentActivity;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -80,6 +82,13 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import androidx.annotation.CallSuper;
+import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
+
 import com.google.android.vending.expansion.downloader.DownloadProgressInfo;
 import com.google.android.vending.expansion.downloader.DownloaderClientMarshaller;
 import com.google.android.vending.expansion.downloader.DownloaderServiceMarshaller;
@@ -87,6 +96,7 @@ import com.google.android.vending.expansion.downloader.Helpers;
 import com.google.android.vending.expansion.downloader.IDownloaderClient;
 import com.google.android.vending.expansion.downloader.IDownloaderService;
 import com.google.android.vending.expansion.downloader.IStub;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -96,14 +106,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+
 import javax.microedition.khronos.opengles.GL10;
-import org.godotengine.godot.input.GodotEditText;
-import org.godotengine.godot.payments.PaymentsManager;
-import org.godotengine.godot.plugin.GodotPlugin;
-import org.godotengine.godot.plugin.GodotPluginRegistry;
-import org.godotengine.godot.utils.GodotNetUtils;
-import org.godotengine.godot.utils.PermissionsUtil;
-import org.godotengine.godot.xr.XRMode;
 
 public abstract class Godot extends FragmentActivity implements SensorEventListener, IDownloaderClient {
 
@@ -261,16 +265,12 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 	}
 	public ResultCallback result_callback;
 
-	private PaymentsManager mPaymentsManager = null;
-
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == PaymentsManager.REQUEST_CODE_FOR_PURCHASE) {
-			mPaymentsManager.processPurchaseResponse(resultCode, data);
-		} else if (result_callback != null) {
+		if (result_callback != null) {
 			result_callback.callback(requestCode, resultCode, data);
 			result_callback = null;
-		};
+		}
 
 		for (int i = 0; i < singleton_count; i++) {
 
@@ -279,7 +279,7 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 		for (GodotPlugin plugin : pluginRegistry.getAllPlugins()) {
 			plugin.onMainActivityResult(requestCode, resultCode, data);
 		}
-	};
+	}
 
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -296,12 +296,12 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 	};
 
 	/**
-	 * Invoked on the GL thread when the Godot main loop has started.
+	 * Invoked on the render thread when the Godot main loop has started.
 	 */
 	@CallSuper
-	protected void onGLGodotMainLoopStarted() {
+	protected void onGodotMainLoopStarted() {
 		for (GodotPlugin plugin : pluginRegistry.getAllPlugins()) {
-			plugin.onGLGodotMainLoopStarted();
+			plugin.onGodotMainLoopStarted();
 		}
 	}
 
@@ -348,7 +348,7 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 
 				// Must occur after GodotLib.setup has completed.
 				for (GodotPlugin plugin : pluginRegistry.getAllPlugins()) {
-					plugin.onGLRegisterPluginWithGodotNative();
+					plugin.onRegisterPluginWithGodotNative();
 				}
 
 				setKeepScreenOn("True".equals(GodotLib.getGlobal("display/window/energy_saving/keep_screen_on")));
@@ -371,7 +371,7 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 
 		// Include the returned non-null views in the Godot view hierarchy.
 		for (GodotPlugin plugin : pluginRegistry.getAllPlugins()) {
-			View pluginView = plugin.onMainCreateView(this);
+			View pluginView = plugin.onMainCreate(this);
 			if (pluginView != null) {
 				layout.addView(pluginView);
 			}
@@ -454,7 +454,8 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 		return deviceInfo.reqGlEsVersion;
 	}
 
-	private String[] getCommandLine() {
+	@CallSuper
+	protected String[] getCommandLine() {
 		InputStream is;
 		try {
 			is = getAssets().open("_cl_");
@@ -554,8 +555,6 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 		GodotLib.initialize(this, getAssets(), use_apk_expansion);
 
 		result_callback = null;
-
-		mPaymentsManager = PaymentsManager.createManager(this).initService();
 
 		godot_initialized = true;
 	}
@@ -713,7 +712,6 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 	@Override
 	protected void onDestroy() {
 
-		if (mPaymentsManager != null) mPaymentsManager.destroy();
 		for (int i = 0; i < singleton_count; i++) {
 			singletons[i].onMainDestroy();
 		}
@@ -920,11 +918,11 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 	}
 
 	/**
-	 * Queue a runnable to be run on the GL thread.
+	 * Queue a runnable to be run on the render thread.
 	 * <p>
-	 * This must be called after the GL thread has started.
+	 * This must be called after the render thread has started.
 	 */
-	public final void runOnGLThread(@NonNull Runnable action) {
+	public final void runOnRenderThread(@NonNull Runnable action) {
 		if (mView != null) {
 			mView.queueEvent(action);
 		}
@@ -1061,10 +1059,6 @@ public abstract class Godot extends FragmentActivity implements SensorEventListe
 			}
 		});
 		return true;
-	}
-
-	public PaymentsManager getPaymentsManager() {
-		return mPaymentsManager;
 	}
 
 	public boolean requestPermission(String p_name) {

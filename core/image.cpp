@@ -85,6 +85,8 @@ const char *Image::format_names[Image::FORMAT_MAX] = {
 SavePNGFunc Image::save_png_func = NULL;
 SaveEXRFunc Image::save_exr_func = NULL;
 
+SavePNGBufferFunc Image::save_png_buffer_func = NULL;
+
 void Image::_put_pixelb(int p_x, int p_y, uint32_t p_pixelsize, uint8_t *p_data, const uint8_t *p_pixel) {
 
 	uint32_t ofs = (p_y * width + p_x) * p_pixelsize;
@@ -869,6 +871,9 @@ void Image::resize_to_po2(bool p_square) {
 
 	int w = next_power_of_2(width);
 	int h = next_power_of_2(height);
+	if (p_square) {
+		w = h = MAX(w, h);
+	}
 
 	if (w == width && h == height) {
 
@@ -1895,6 +1900,14 @@ Error Image::save_png(const String &p_path) const {
 	return save_png_func(p_path, Ref<Image>((Image *)this));
 }
 
+PoolVector<uint8_t> Image::save_png_to_buffer() const {
+	if (save_png_buffer_func == NULL) {
+		return PoolVector<uint8_t>();
+	}
+
+	return save_png_buffer_func(Ref<Image>((Image *)this));
+}
+
 Error Image::save_exr(const String &p_path, bool p_grayscale) const {
 
 	if (save_exr_func == NULL)
@@ -2210,12 +2223,11 @@ void Image::blend_rect(const Ref<Image> &p_src, const Rect2 &p_src_rect, const P
 			int dst_y = dest_rect.position.y + i;
 
 			Color sc = img->get_pixel(src_x, src_y);
-			Color dc = get_pixel(dst_x, dst_y);
-			dc.r = (double)(sc.a * sc.r + dc.a * (1.0 - sc.a) * dc.r);
-			dc.g = (double)(sc.a * sc.g + dc.a * (1.0 - sc.a) * dc.g);
-			dc.b = (double)(sc.a * sc.b + dc.a * (1.0 - sc.a) * dc.b);
-			dc.a = (double)(sc.a + dc.a * (1.0 - sc.a));
-			set_pixel(dst_x, dst_y, dc);
+			if (sc.a != 0) {
+				Color dc = get_pixel(dst_x, dst_y);
+				dc = dc.blend(sc);
+				set_pixel(dst_x, dst_y, dc);
+			}
 		}
 	}
 
@@ -2272,12 +2284,11 @@ void Image::blend_rect_mask(const Ref<Image> &p_src, const Ref<Image> &p_mask, c
 				int dst_y = dest_rect.position.y + i;
 
 				Color sc = img->get_pixel(src_x, src_y);
-				Color dc = get_pixel(dst_x, dst_y);
-				dc.r = (double)(sc.a * sc.r + dc.a * (1.0 - sc.a) * dc.r);
-				dc.g = (double)(sc.a * sc.g + dc.a * (1.0 - sc.a) * dc.g);
-				dc.b = (double)(sc.a * sc.b + dc.a * (1.0 - sc.a) * dc.b);
-				dc.a = (double)(sc.a + dc.a * (1.0 - sc.a));
-				set_pixel(dst_x, dst_y, dc);
+				if (sc.a != 0) {
+					Color dc = get_pixel(dst_x, dst_y);
+					dc = dc.blend(sc);
+					set_pixel(dst_x, dst_y, dc);
+				}
 			}
 		}
 	}
@@ -2725,6 +2736,7 @@ void Image::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("load", "path"), &Image::load);
 	ClassDB::bind_method(D_METHOD("save_png", "path"), &Image::save_png);
+	ClassDB::bind_method(D_METHOD("save_png_to_buffer"), &Image::save_png_to_buffer);
 	ClassDB::bind_method(D_METHOD("save_exr", "path", "grayscale"), &Image::save_exr, DEFVAL(false));
 
 	ClassDB::bind_method(D_METHOD("detect_alpha"), &Image::detect_alpha);

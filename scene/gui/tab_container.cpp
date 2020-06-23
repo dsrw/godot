@@ -438,7 +438,30 @@ void TabContainer::_notification(int p_what) {
 
 void TabContainer::_on_theme_changed() {
 	if (get_tab_count() > 0) {
-		set_current_tab(get_current_tab());
+		_repaint();
+		update();
+	}
+}
+
+void TabContainer::_repaint() {
+	Ref<StyleBox> sb = get_stylebox("panel");
+	Vector<Control *> tabs = _get_tabs();
+	for (int i = 0; i < tabs.size(); i++) {
+		Control *c = tabs[i];
+		if (i == current) {
+			c->show();
+			c->set_anchors_and_margins_preset(Control::PRESET_WIDE);
+			if (tabs_visible) {
+				c->set_margin(MARGIN_TOP, _get_top_margin());
+			}
+			c->set_margin(Margin(MARGIN_TOP), c->get_margin(Margin(MARGIN_TOP)) + sb->get_margin(Margin(MARGIN_TOP)));
+			c->set_margin(Margin(MARGIN_LEFT), c->get_margin(Margin(MARGIN_LEFT)) + sb->get_margin(Margin(MARGIN_LEFT)));
+			c->set_margin(Margin(MARGIN_RIGHT), c->get_margin(Margin(MARGIN_RIGHT)) - sb->get_margin(Margin(MARGIN_RIGHT)));
+			c->set_margin(Margin(MARGIN_BOTTOM), c->get_margin(Margin(MARGIN_BOTTOM)) - sb->get_margin(Margin(MARGIN_BOTTOM)));
+
+		} else {
+			c->hide();
+		}
 	}
 }
 
@@ -554,24 +577,7 @@ void TabContainer::set_current_tab(int p_current) {
 	int pending_previous = current;
 	current = p_current;
 
-	Ref<StyleBox> sb = get_stylebox("panel");
-	Vector<Control *> tabs = _get_tabs();
-	for (int i = 0; i < tabs.size(); i++) {
-
-		Control *c = tabs[i];
-		if (i == current) {
-			c->show();
-			c->set_anchors_and_margins_preset(Control::PRESET_WIDE);
-			if (tabs_visible)
-				c->set_margin(MARGIN_TOP, _get_top_margin());
-			c->set_margin(Margin(MARGIN_TOP), c->get_margin(Margin(MARGIN_TOP)) + sb->get_margin(Margin(MARGIN_TOP)));
-			c->set_margin(Margin(MARGIN_LEFT), c->get_margin(Margin(MARGIN_LEFT)) + sb->get_margin(Margin(MARGIN_LEFT)));
-			c->set_margin(Margin(MARGIN_RIGHT), c->get_margin(Margin(MARGIN_RIGHT)) - sb->get_margin(Margin(MARGIN_RIGHT)));
-			c->set_margin(Margin(MARGIN_BOTTOM), c->get_margin(Margin(MARGIN_BOTTOM)) - sb->get_margin(Margin(MARGIN_BOTTOM)));
-
-		} else
-			c->hide();
-	}
+	_repaint();
 
 	_change_notify("current_tab");
 
@@ -785,23 +791,25 @@ TabContainer::TabAlign TabContainer::get_tab_align() const {
 	return align;
 }
 
-void TabContainer::set_tabs_visible(bool p_visibe) {
+void TabContainer::set_tabs_visible(bool p_visible) {
 
-	if (p_visibe == tabs_visible)
+	if (p_visible == tabs_visible)
 		return;
 
-	tabs_visible = p_visibe;
+	tabs_visible = p_visible;
 
 	Vector<Control *> tabs = _get_tabs();
 	for (int i = 0; i < tabs.size(); i++) {
 
 		Control *c = tabs[i];
-		if (p_visibe)
+		if (p_visible)
 			c->set_margin(MARGIN_TOP, _get_top_margin());
 		else
 			c->set_margin(MARGIN_TOP, 0);
 	}
+
 	update();
+	minimum_size_changed();
 }
 
 bool TabContainer::are_tabs_visible() const {
@@ -936,8 +944,10 @@ Size2 TabContainer::get_minimum_size() const {
 	Ref<StyleBox> tab_disabled = get_stylebox("tab_disabled");
 	Ref<Font> font = get_font("font");
 
-	ms.y += MAX(MAX(tab_bg->get_minimum_size().y, tab_fg->get_minimum_size().y), tab_disabled->get_minimum_size().y);
-	ms.y += font->get_height();
+	if (tabs_visible) {
+		ms.y += MAX(MAX(tab_bg->get_minimum_size().y, tab_fg->get_minimum_size().y), tab_disabled->get_minimum_size().y);
+		ms.y += font->get_height();
+	}
 
 	Ref<StyleBox> sb = get_stylebox("panel");
 	ms += sb->get_minimum_size();
@@ -986,7 +996,7 @@ void TabContainer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_current_tab"), &TabContainer::get_current_tab);
 	ClassDB::bind_method(D_METHOD("get_previous_tab"), &TabContainer::get_previous_tab);
 	ClassDB::bind_method(D_METHOD("get_current_tab_control"), &TabContainer::get_current_tab_control);
-	ClassDB::bind_method(D_METHOD("get_tab_control", "idx"), &TabContainer::get_tab_control);
+	ClassDB::bind_method(D_METHOD("get_tab_control", "tab_idx"), &TabContainer::get_tab_control);
 	ClassDB::bind_method(D_METHOD("set_tab_align", "align"), &TabContainer::set_tab_align);
 	ClassDB::bind_method(D_METHOD("get_tab_align"), &TabContainer::get_tab_align);
 	ClassDB::bind_method(D_METHOD("set_tabs_visible", "visible"), &TabContainer::set_tabs_visible);

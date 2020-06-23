@@ -2167,6 +2167,14 @@ bool ShaderLanguage::_validate_function_call(BlockNode *p_block, OperatorNode *p
 										valid = true;
 										break;
 									}
+									if (b->parent_function) {
+										for (int i = 0; i < b->parent_function->arguments.size(); i++) {
+											if (b->parent_function->arguments[i].name == var_name) {
+												valid = true;
+												break;
+											}
+										}
+									}
 									b = b->parent_block;
 								}
 
@@ -5148,6 +5156,7 @@ Error ShaderLanguage::_parse_shader(const Map<StringName, FunctionInfo> &p_funct
 
 					while (true) {
 						ShaderNode::Constant constant;
+						constant.name = name;
 						constant.type = type;
 						constant.precision = precision;
 						constant.initializer = NULL;
@@ -5182,6 +5191,8 @@ Error ShaderLanguage::_parse_shader(const Map<StringName, FunctionInfo> &p_funct
 						}
 
 						shader->constants[name] = constant;
+						shader->vconstants.push_back(constant);
+
 						if (tk.type == TK_COMMA) {
 							tk = _get_token();
 							if (tk.type != TK_IDENTIFIER) {
