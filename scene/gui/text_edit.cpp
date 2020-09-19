@@ -1250,11 +1250,7 @@ void TextEdit::_notification(int p_what) {
 								int marker_width = cache.breakpoint_gutter_width - (horizontal_gap * 2) + icon_extra_size;
 								cache.executing_icon->draw_rect(ci, Rect2(cache.style_normal->get_margin(MARGIN_LEFT) + horizontal_gap - 2 - icon_extra_size / 2, ofs_y + vertical_gap - icon_extra_size / 2, marker_width, marker_height), false, Color(cache.executing_line_color.r, cache.executing_line_color.g, cache.executing_line_color.b));
 							} else {
-#ifdef TOOLS_ENABLED
-								VisualServer::get_singleton()->canvas_item_add_rect(ci, Rect2(xmargin_beg + ofs_x, ofs_y + get_row_height() - EDSCALE, xmargin_end - xmargin_beg, EDSCALE), cache.executing_line_color);
-#else
 								VisualServer::get_singleton()->canvas_item_add_rect(ci, Rect2(xmargin_beg + ofs_x, ofs_y, xmargin_end - xmargin_beg, get_row_height()), cache.executing_line_color);
-#endif
 							}
 						}
 
@@ -7218,6 +7214,19 @@ void TextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_drawing_minimap"), &TextEdit::is_drawing_minimap);
 	ClassDB::bind_method(D_METHOD("set_minimap_width", "width"), &TextEdit::set_minimap_width);
 	ClassDB::bind_method(D_METHOD("get_minimap_width"), &TextEdit::get_minimap_width);
+
+	ClassDB::bind_method(D_METHOD("set_indent_size", "size"), &TextEdit::set_indent_size);
+	ClassDB::bind_method(D_METHOD("get_indent_size"), &TextEdit::get_indent_size);
+
+	ClassDB::bind_method(D_METHOD("set_indent_using_spaces", "enabled"), &TextEdit::set_indent_using_spaces);
+	ClassDB::bind_method(D_METHOD("is_indent_using_spaces"), &TextEdit::is_indent_using_spaces);
+
+	ClassDB::bind_method(D_METHOD("set_line_as_marked", "line", "marked"), &TextEdit::set_line_as_marked);
+	ClassDB::bind_method(D_METHOD("set_executing_line", "line"), &TextEdit::set_executing_line);
+	ClassDB::bind_method(D_METHOD("clear_executing_line"), &TextEdit::clear_executing_line);
+
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "indent_using_spaces"), "set_indent_using_spaces", "is_indent_using_spaces");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "indent_size", PROPERTY_HINT_RANGE, "0,8,1,or_greater"), "set_indent_size", "get_indent_size");
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");
