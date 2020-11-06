@@ -103,7 +103,6 @@ static void push_to_key_event_buffer(const OS_OSX::KeyEvent &p_event) {
 static int mouse_x = 0;
 static int mouse_y = 0;
 static int button_mask = 0;
-static bool mouse_down_control = false;
 
 static Vector2 get_mouse_pos(NSPoint locationInWindow) {
 
@@ -706,13 +705,7 @@ static void _mouseDownEvent(NSEvent *event, int index, int mask, bool pressed) {
 }
 
 - (void)mouseDown:(NSEvent *)event {
-	if (([event modifierFlags] & NSEventModifierFlagControl)) {
-		mouse_down_control = true;
-		_mouseDownEvent(event, BUTTON_RIGHT, BUTTON_MASK_RIGHT, true);
-	} else {
-		mouse_down_control = false;
-		_mouseDownEvent(event, BUTTON_LEFT, BUTTON_MASK_LEFT, true);
-	}
+	_mouseDownEvent(event, BUTTON_LEFT, BUTTON_MASK_LEFT, true);
 }
 
 - (void)mouseDragged:(NSEvent *)event {
@@ -720,11 +713,7 @@ static void _mouseDownEvent(NSEvent *event, int index, int mask, bool pressed) {
 }
 
 - (void)mouseUp:(NSEvent *)event {
-	if (mouse_down_control) {
-		_mouseDownEvent(event, BUTTON_RIGHT, BUTTON_MASK_RIGHT, false);
-	} else {
-		_mouseDownEvent(event, BUTTON_LEFT, BUTTON_MASK_LEFT, false);
-	}
+	_mouseDownEvent(event, BUTTON_LEFT, BUTTON_MASK_LEFT, false);
 }
 
 - (void)mouseMoved:(NSEvent *)event {
