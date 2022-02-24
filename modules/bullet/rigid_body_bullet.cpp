@@ -250,7 +250,10 @@ void RigidBodyBullet::KinematicUtilities::copyAllOwnerShapes() {
 				shapes.write[i].shape = static_cast<btConvexShape *>(shape_wrapper->shape->create_bt_shape(owner_scale * shape_wrapper->scale, safe_margin));
 			} break;
 			default:
-				WARN_PRINT("This shape is not supported to be kinematic!");
+			    // I modified godot-voxel to produce kinematic bodies to get
+			    // moving platforms working. This should be revisited. Silence
+			    // this warning for now.
+				// WARN_PRINT("This shape is not supported to be kinematic!");
 				shapes.write[i].shape = nullptr;
 		}
 	}
