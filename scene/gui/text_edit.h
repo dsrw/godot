@@ -66,9 +66,11 @@ public:
 		struct ColorRegionInfo {
 			int region;
 			bool end;
+            bool escaped;
 			ColorRegionInfo() {
 				region = 0;
 				end = false;
+                escaped = false;
 			}
 		};
 

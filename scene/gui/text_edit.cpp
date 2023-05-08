@@ -149,7 +149,9 @@ void TextEdit::Text::_update_line_cache(int p_line) const {
 			continue;
 		}
 		if (str[i] == '\\') {
-			i++; // Skip quoted anything.
+            if (i >= len || str[i + 1] != '"') {
+                i++; // Skip quoted anything, except \"
+            }
 			continue;
 		}
 
@@ -180,6 +182,9 @@ void TextEdit::Text::_update_line_cache(int p_line) const {
 					ColorRegionInfo cri;
 					cri.end = false;
 					cri.region = j;
+                    if (i > 0) {
+                        cri.escaped = str[i] == '"' && str[i - 1] == '\\';
+                    }
 					text.write[p_line].region_info[i] = cri;
 					i += lr - 1;
 
@@ -5510,7 +5515,7 @@ int TextEdit::_is_line_in_region(int p_line) {
 					in_region = cri.region;
 				}
 			} else if (in_region == cri.region && !_get_color_region(cri.region).line_only) {
-				if (cri.end || _get_color_region(cri.region).eq) {
+				if (cri.end || (_get_color_region(cri.region).eq && !cri.escaped)) {
 					in_region = -1;
 				}
 			}
@@ -7923,7 +7928,7 @@ Map<int, TextEdit::HighlighterInfo> TextEdit::_get_line_syntax_highlighting(int 
 					in_region = cri.region;
 				}
 			} else if (in_region == cri.region && !color_regions[cri.region].line_only) { // Ignore otherwise.
-				if (cri.end || color_regions[cri.region].eq) {
+				if (cri.end || (color_regions[cri.region].eq != cri.escaped)) {
 					deregion = color_regions[cri.region].eq ? color_regions[cri.region].begin_key.length() : color_regions[cri.region].end_key.length();
 				}
 			}
