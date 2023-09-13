@@ -649,7 +649,7 @@ void TextEdit::_notification(int p_what) {
 		} break;
 		case MainLoop::NOTIFICATION_WM_FOCUS_OUT: {
 			window_has_focus = false;
-			draw_caret = false;
+			draw_caret = always_draw_caret;
 			update();
 		} break;
 		case NOTIFICATION_INTERNAL_PHYSICS_PROCESS: {
@@ -681,7 +681,7 @@ void TextEdit::_notification(int p_what) {
 			}
 			Size2 size = get_size();
 			if ((!has_focus() && !menu->has_focus()) || !window_has_focus) {
-				draw_caret = false;
+				draw_caret = always_draw_caret;
 			}
 
 			if (draw_breakpoint_gutter || draw_bookmark_gutter) {
@@ -738,7 +738,7 @@ void TextEdit::_notification(int p_what) {
 			cache.style_normal->draw(ci, Rect2(Point2(), size));
 			if (readonly) {
 				cache.style_readonly->draw(ci, Rect2(Point2(), size));
-				draw_caret = false;
+				draw_caret = always_draw_caret;
 			}
 			if (has_focus()) {
 				cache.style_focus->draw(ci, Rect2(Point2(), size));
@@ -1302,11 +1302,7 @@ void TextEdit::_notification(int p_what) {
 								int marker_width = cache.breakpoint_gutter_width - (horizontal_gap * 2) + icon_extra_size;
 								cache.executing_icon->draw_rect(ci, Rect2(cache.style_normal->get_margin(MARGIN_LEFT) + horizontal_gap - 2 - icon_extra_size / 2, ofs_y + vertical_gap - icon_extra_size / 2, marker_width, marker_height), false, Color(cache.executing_line_color.r, cache.executing_line_color.g, cache.executing_line_color.b));
 							} else {
-#ifdef TOOLS_ENABLED
-								VisualServer::get_singleton()->canvas_item_add_rect(ci, Rect2(xmargin_beg + ofs_x, ofs_y + get_row_height() - EDSCALE, xmargin_end - xmargin_beg, EDSCALE), cache.executing_line_color);
-#else
 								VisualServer::get_singleton()->canvas_item_add_rect(ci, Rect2(xmargin_beg + ofs_x, ofs_y, xmargin_end - xmargin_beg, get_row_height()), cache.executing_line_color);
-#endif
 							}
 						}
 
@@ -5410,9 +5406,11 @@ void TextEdit::_reset_caret_blink_timer() {
 }
 
 void TextEdit::_toggle_draw_caret() {
-	draw_caret = !draw_caret;
-	if (is_visible_in_tree() && has_focus() && window_has_focus) {
-		update();
+    if (!always_draw_caret) {
+		draw_caret = !draw_caret;
+		if (is_visible_in_tree() && has_focus() && window_has_focus) {
+			update();
+		}
 	}
 }
 
@@ -6612,6 +6610,14 @@ bool TextEdit::is_indent_using_spaces() const {
 	return indent_using_spaces;
 }
 
+void TextEdit::set_always_draw_caret(const bool p_show_caret) {
+	always_draw_caret = p_show_caret;
+}
+
+bool TextEdit::is_always_draw_caret() const {
+	return always_draw_caret;
+}
+
 void TextEdit::set_indent_size(const int p_size) {
 	ERR_FAIL_COND_MSG(p_size <= 0, "Indend size must be greater than 0.");
 	indent_size = p_size;
@@ -7604,6 +7610,23 @@ void TextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_drawing_minimap"), &TextEdit::is_drawing_minimap);
 	ClassDB::bind_method(D_METHOD("set_minimap_width", "width"), &TextEdit::set_minimap_width);
 	ClassDB::bind_method(D_METHOD("get_minimap_width"), &TextEdit::get_minimap_width);
+
+	ClassDB::bind_method(D_METHOD("set_indent_size", "size"), &TextEdit::set_indent_size);
+	ClassDB::bind_method(D_METHOD("get_indent_size"), &TextEdit::get_indent_size);
+
+	ClassDB::bind_method(D_METHOD("set_indent_using_spaces", "enabled"), &TextEdit::set_indent_using_spaces);
+	ClassDB::bind_method(D_METHOD("is_indent_using_spaces"), &TextEdit::is_indent_using_spaces);
+
+	ClassDB::bind_method(D_METHOD("set_always_draw_caret", "enabled"), &TextEdit::set_always_draw_caret);
+	ClassDB::bind_method(D_METHOD("is_always_draw_caret"), &TextEdit::is_always_draw_caret);
+
+	ClassDB::bind_method(D_METHOD("set_line_as_marked", "line", "marked"), &TextEdit::set_line_as_marked);
+	ClassDB::bind_method(D_METHOD("set_executing_line", "line"), &TextEdit::set_executing_line);
+	ClassDB::bind_method(D_METHOD("clear_executing_line"), &TextEdit::clear_executing_line);
+
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "indent_using_spaces"), "set_indent_using_spaces", "is_indent_using_spaces");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "always_draw_caret"), "set_always_draw_caret", "is_always_draw_caret");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "indent_size", PROPERTY_HINT_RANGE, "0,8,1,or_greater"), "set_indent_size", "get_indent_size");
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");

@@ -350,6 +350,7 @@ private:
 	bool readonly;
 	bool syntax_coloring;
 	bool indent_using_spaces;
+	bool always_draw_caret;
 	int indent_size;
 	String space_indent;
 
@@ -758,6 +759,8 @@ public:
 
 	void set_indent_using_spaces(const bool p_use_spaces);
 	bool is_indent_using_spaces() const;
+	void set_always_draw_caret(const bool p_show_caret);
+	bool is_always_draw_caret() const;
 	void set_indent_size(const int p_size);
 	int get_indent_size();
 	void set_draw_tabs(bool p_draw);
