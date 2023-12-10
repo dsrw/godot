@@ -258,6 +258,13 @@ uint32_t InputEventKey::get_unicode() const {
 	return unicode;
 }
 
+void InputEventKey::set_raw_code(uint32_t p_raw_code) {
+	raw_code = p_raw_code;
+}
+uint32_t InputEventKey::get_raw_code() const {
+	return raw_code;
+}
+
 void InputEventKey::set_echo(bool p_enable) {
 	echo = p_enable;
 }
@@ -364,6 +371,9 @@ void InputEventKey::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_unicode", "unicode"), &InputEventKey::set_unicode);
 	ClassDB::bind_method(D_METHOD("get_unicode"), &InputEventKey::get_unicode);
 
+    ClassDB::bind_method(D_METHOD("set_raw_code", "raw_code"), &InputEventKey::set_raw_code);
+	ClassDB::bind_method(D_METHOD("get_raw_code"), &InputEventKey::get_raw_code);
+
 	ClassDB::bind_method(D_METHOD("set_echo", "echo"), &InputEventKey::set_echo);
 
 	ClassDB::bind_method(D_METHOD("get_scancode_with_modifiers"), &InputEventKey::get_scancode_with_modifiers);
@@ -373,6 +383,7 @@ void InputEventKey::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "scancode"), "set_scancode", "get_scancode");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "physical_scancode"), "set_physical_scancode", "get_physical_scancode");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unicode"), "set_unicode", "get_unicode");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "raw_code"), "set_raw_code", "get_raw_code");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "echo"), "set_echo", "is_echo");
 }
 
@@ -380,6 +391,7 @@ InputEventKey::InputEventKey() {
 	scancode = 0;
 	physical_scancode = 0;
 	unicode = 0; ///unicode
+	raw_code = 0;
 	echo = false;
 }
 

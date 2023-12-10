@@ -67,6 +67,7 @@ private:
 		uint32_t physical_keycode = 0;
 		uint32_t unicode = 0;
 		int mod = 0;
+		int raw_code = 0;
 	};
 
 	Vector<KeyEvent> key_event_buffer;

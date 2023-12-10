@@ -64,6 +64,7 @@ public:
 		unsigned int scancode;
 		unsigned int physical_scancode;
 		unsigned int unicode;
+		unsigned int raw_code;
 		bool echo;
 		CorePhysicalKeyStatus status;
 	};

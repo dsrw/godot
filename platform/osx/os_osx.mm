@@ -1229,6 +1229,7 @@ static int remapKey(unsigned int key, unsigned int state) {
 				ke.echo = [event isARepeat];
 				ke.scancode = remapKey([event keyCode], [event modifierFlags]);
 				ke.physical_scancode = translateKey([event keyCode]);
+				ke.raw_code = [event keyCode];
 				ke.raw = true;
 				ke.unicode = [characters characterAtIndex:i];
 
@@ -1241,6 +1242,7 @@ static int remapKey(unsigned int key, unsigned int state) {
 			ke.pressed = true;
 			ke.echo = [event isARepeat];
 			ke.scancode = remapKey([event keyCode], [event modifierFlags]);
+			ke.raw_code = [event keyCode];
 			ke.physical_scancode = translateKey([event keyCode]);
 			ke.raw = false;
 			ke.unicode = 0;
@@ -1301,6 +1303,7 @@ static int remapKey(unsigned int key, unsigned int state) {
 
 		ke.osx_state = mod;
 		ke.scancode = remapKey(key, mod);
+		ke.raw_code = key;
 		ke.physical_scancode = translateKey(key);
 		ke.unicode = 0;
 
@@ -1324,6 +1327,7 @@ static int remapKey(unsigned int key, unsigned int state) {
 				ke.echo = [event isARepeat];
 				ke.scancode = remapKey([event keyCode], [event modifierFlags]);
 				ke.physical_scancode = translateKey([event keyCode]);
+				ke.raw_code = [event keyCode];
 				ke.raw = true;
 				ke.unicode = [characters characterAtIndex:i];
 
@@ -1337,6 +1341,7 @@ static int remapKey(unsigned int key, unsigned int state) {
 			ke.echo = [event isARepeat];
 			ke.scancode = remapKey([event keyCode], [event modifierFlags]);
 			ke.physical_scancode = translateKey([event keyCode]);
+			ke.raw_code = [event keyCode];
 			ke.raw = true;
 			ke.unicode = 0;
 
@@ -3371,6 +3376,7 @@ void OS_OSX::process_key_events() {
 			k->set_pressed(ke.pressed);
 			k->set_echo(ke.echo);
 			k->set_scancode(ke.scancode);
+			k->set_raw_code(ke.raw_code);
 			k->set_physical_scancode(ke.physical_scancode);
 			k->set_unicode(ke.unicode);
 
@@ -3384,6 +3390,7 @@ void OS_OSX::process_key_events() {
 				k->set_pressed(ke.pressed);
 				k->set_echo(ke.echo);
 				k->set_scancode(0);
+				k->set_raw_code(0);
 				k->set_physical_scancode(0);
 				k->set_unicode(ke.unicode);
 

@@ -2137,6 +2137,7 @@ void OS_X11::_handle_key_event(XKeyEvent *p_event, LocalVector<XEvent> &p_events
 
 				k->set_scancode(keycode);
 				k->set_physical_scancode(physical_keycode);
+				k->set_raw_code(keysym_keycode);
 
 				k->set_echo(false);
 
@@ -2263,6 +2264,7 @@ void OS_X11::_handle_key_event(XKeyEvent *p_event, LocalVector<XEvent> &p_events
 	k->set_scancode(keycode);
 	k->set_physical_scancode(physical_keycode);
 	k->set_unicode(unicode);
+	k->set_raw_code(keysym_keycode);
 	k->set_echo(p_echo);
 
 	if (k->get_scancode() == KEY_BACKTAB) {
