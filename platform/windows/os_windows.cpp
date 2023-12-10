@@ -1184,6 +1184,7 @@ void OS_Windows::process_key_events() {
 					k->set_metakey(ke.meta);
 					k->set_pressed(true);
 					k->set_scancode(KeyMappingWindows::get_keysym(ke.wParam));
+					k->set_raw_code(ke.wParam);
 					k->set_physical_scancode(KeyMappingWindows::get_scansym((ke.lParam >> 16) & 0xFF, ke.lParam & (1 << 24)));
 					k->set_unicode(ke.wParam);
 					if (k->get_unicode() && gr_mem) {
@@ -1219,7 +1220,8 @@ void OS_Windows::process_key_events() {
 				}
 
 				k->set_physical_scancode(KeyMappingWindows::get_scansym((ke.lParam >> 16) & 0xFF, ke.lParam & (1 << 24)));
-
+				k->set_raw_code(ke.wParam);	
+				
 				if (i + 1 < key_event_pos && key_event_buffer[i + 1].uMsg == WM_CHAR) {
 					k->set_unicode(key_event_buffer[i + 1].wParam);
 				}

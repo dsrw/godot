@@ -2077,6 +2077,7 @@ void OS_X11::_handle_key_event(XKeyEvent *p_event, LocalVector<XEvent> &p_events
 
 				k->set_scancode(keycode);
 				k->set_physical_scancode(physical_keycode);
+				k->set_raw_code(keysym_keycode);
 
 				k->set_echo(false);
 
@@ -2111,7 +2112,7 @@ void OS_X11::_handle_key_event(XKeyEvent *p_event, LocalVector<XEvent> &p_events
 	// KeyMappingX11 just translated the X11 keysym to a PIGUI
 	// keysym, so it works in all platforms the same.
 
-	unsigned int keycode = KeyMappingX11::get_keycode(keysym_keycode);
+	unsigned int keycode = KeyMappingX11::get_keycode(d);
 	unsigned int physical_keycode = KeyMappingX11::get_scancode(xkeyevent->keycode);
 
 	/* Phase 3, obtain a unicode character from the keysym */
@@ -2203,6 +2204,7 @@ void OS_X11::_handle_key_event(XKeyEvent *p_event, LocalVector<XEvent> &p_events
 	k->set_scancode(keycode);
 	k->set_physical_scancode(physical_keycode);
 	k->set_unicode(unicode);
+	k->set_raw_code(keysym_keycode);
 	k->set_echo(p_echo);
 
 	if (k->get_scancode() == KEY_BACKTAB) {
