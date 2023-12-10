@@ -64,6 +64,7 @@ public:
 		uint32_t scancode;
 		uint32_t physical_scancode;
 		uint32_t unicode;
+		uint32_t raw_code;
 	};
 
 	struct WarpEvent {

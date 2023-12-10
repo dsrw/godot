@@ -88,6 +88,7 @@ void AndroidInputHandler::process_key_event(int p_keycode, int p_scancode, int p
 
 	ev->set_unicode(val);
 	ev->set_pressed(p_pressed);
+	ev->set_raw_code(p_keycode);
 
 	_set_key_modifier_state(ev);
 

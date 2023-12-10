@@ -200,6 +200,7 @@ void OS_JavaScript::key_callback(int p_pressed, int p_repeat, int p_modifiers) {
 	ev->set_scancode(dom_code2godot_scancode(key_event.code, key_event.key, false));
 	ev->set_physical_scancode(dom_code2godot_scancode(key_event.code, key_event.key, true));
 	ev->set_pressed(p_pressed);
+	ev->set_raw_code(key_event.code);
 	dom2godot_mod(ev, p_modifiers);
 
 	String unicode = String::utf8(key_event.key);
