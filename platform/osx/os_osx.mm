@@ -168,6 +168,14 @@ static NSCursor *cursorFromSelector(SEL selector, SEL fallback = nil) {
 
 @implementation GodotApplicationDelegate
 
+- (void)didReceiveGetURLEvent:(NSAppleEventDescriptor*)URLEvent replyEvent:(NSAppleEventDescriptor*)replyEvent {
+    NSString * urlString = [[URLEvent paramDescriptorForKeyword:keyDirectObject] stringValue];
+    NSURL * url = [NSURL URLWithString:urlString];
+
+	// TODO: This isn't a menu action. Find a bettery way to dispatch this to Enu.
+    OS_OSX::singleton->main_loop->global_menu_action(Variant("openurl"), Variant([url.absoluteString UTF8String]));
+}
+
 - (void)forceUnbundledWindowActivationHackStep1 {
 	// Step 1: Switch focus to macOS SystemUIServer process.
 	// Required to perform step 2, TransformProcessType will fail if app is already the in focus.
@@ -199,6 +207,8 @@ static NSCursor *cursorFromSelector(SEL selector, SEL fallback = nil) {
 		// If the executable is started from terminal or is not bundled, macOS WindowServer won't register and activate app window correctly (menu and title bar are grayed out and input ignored).
 		[self performSelector:@selector(forceUnbundledWindowActivationHackStep1) withObject:nil afterDelay:0.02];
 	}
+
+	[NSAppleEventManager.sharedAppleEventManager setEventHandler:self andSelector:@selector(didReceiveGetURLEvent:replyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
 }
 
 - (void)globalMenuCallback:(id)sender {
@@ -282,6 +292,11 @@ static NSCursor *cursorFromSelector(SEL selector, SEL fallback = nil) {
 - (void)showAbout:(id)sender {
 	if (OS_OSX::singleton->get_main_loop())
 		OS_OSX::singleton->get_main_loop()->notification(MainLoop::NOTIFICATION_WM_ABOUT);
+}
+
+- (void)showSettings:(id)sender {
+	if (OS_OSX::singleton->get_main_loop())
+		OS_OSX::singleton->main_loop->global_menu_action(Variant("settings"), Variant("settings"));
 }
 
 @end
@@ -3561,6 +3576,10 @@ OS_OSX::OS_OSX() {
 	title = [NSString stringWithFormat:NSLocalizedString(@"About %@", nil), nsappname];
 	[apple_menu addItemWithTitle:title action:@selector(showAbout:) keyEquivalent:@""];
 
+	[apple_menu addItem:[NSMenuItem separatorItem]];
+	// Setup Apple menu
+	title = [NSString stringWithFormat:NSLocalizedString(@"Settings...", nil), nsappname];
+	[apple_menu addItemWithTitle:title action:@selector(showSettings:) keyEquivalent:@","];
 	[apple_menu addItem:[NSMenuItem separatorItem]];
 
 	NSMenu *services = [[NSMenu alloc] initWithTitle:@""];
