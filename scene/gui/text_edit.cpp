@@ -3082,29 +3082,29 @@ void TextEdit::_gui_input(const Ref<InputEvent> &p_gui_input) {
 
 				// Keep indentation.
 				int space_count = 0;
-				for (int i = 0; i < cursor.column; i++) {
-					if (text[cursor.line][i] == '\t') {
-						if (indent_using_spaces) {
-							ins += space_indent;
-						} else {
-							ins += "\t";
-						}
-						space_count = 0;
-					} else if (text[cursor.line][i] == ' ') {
-						space_count++;
+				// for (int i = 0; i < cursor.column; i++) {
+				// 	if (text[cursor.line][i] == '\t') {
+				// 		if (indent_using_spaces) {
+				// 			ins += space_indent;
+				// 		} else {
+				// 			ins += "\t";
+				// 		}
+				// 		space_count = 0;
+				// 	} else if (text[cursor.line][i] == ' ') {
+				// 		space_count++;
 
-						if (space_count == indent_size) {
-							if (indent_using_spaces) {
-								ins += space_indent;
-							} else {
-								ins += "\t";
-							}
-							space_count = 0;
-						}
-					} else {
-						break;
-					}
-				}
+				// 		if (space_count == indent_size) {
+				// 			if (indent_using_spaces) {
+				// 				ins += space_indent;
+				// 			} else {
+				// 				ins += "\t";
+				// 			}
+				// 			space_count = 0;
+				// 		}
+				// 	} else {
+				// 		break;
+				// 	}
+				// }
 
 				if (is_folded(cursor.line)) {
 					unfold_line(cursor.line);

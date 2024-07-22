@@ -65,6 +65,12 @@
 - (void)godot_commonInit {
 	self.hidden = YES;
 	self.delegate = self;
+    self.autocapitalizationType = UITextAutocapitalizationTypeNone;
+	self.autocorrectionType = UITextAutocorrectionTypeNo;
+	self.spellCheckingType = UITextSpellCheckingTypeNo;
+	self.smartQuotesType = UITextSmartQuotesTypeNo;
+	self.smartDashesType = UITextSmartDashesTypeNo;
+	self.smartInsertDeleteType = UITextSmartInsertDeleteTypeNo;
 
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(observeTextChange:)
