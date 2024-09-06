@@ -148,6 +148,28 @@
 	}
 }
 
+- (NSString *)extractLastLine:(NSString *)text {
+    // Ensure the text is not empty
+    if (text.length == 0) {
+        return @"";
+    }
+
+    // Remove the trailing newline if it exists
+    if ([text hasSuffix:@"\n"]) {
+        text = [text substringToIndex:text.length - 1];
+    }
+
+    // Find the range of the last newline character
+    NSRange range = [text rangeOfString:@"\n" options:NSBackwardsSearch];
+
+    if (range.location == NSNotFound) {
+        // If no newline is found, return the entire text
+        return text;
+    } else {
+        NSUInteger lineStart = range.location + 1;
+        return [text substringFromIndex:lineStart];
+    }
+}
 // MARK: Observer
 
 - (void)observeTextChange:(NSNotification *)notification {
@@ -167,6 +189,9 @@
 		[self deleteText:1];
 	}
 
+	// Text changes added by the godot editor don't get synced back here,
+	// so we handle indentation in the UITextField instead. Fixed in godot 4.
+	int indent = 0;
 	NSString *substringToEnter;
 
 	if (self.selectedRange.length == 0) {
@@ -188,6 +213,24 @@
 			substringToEnter = [self.text substringWithRange:calculatedRange];
 		} else {
 			substringToEnter = [self.text substringToIndex:self.selectedRange.location];
+			NSCharacterSet *spaceCharacterSet = [NSCharacterSet characterSetWithCharactersInString:@" \n"];
+            NSString *lastLine = [self extractLastLine:substringToEnter];
+            NSString *stripped = [lastLine stringByTrimmingCharactersInSet:spaceCharacterSet];
+			if (self.text.length > self.previousText.length && [substringToEnter hasSuffix:@"\n"]) {
+				lastLine = [lastLine stringByAppendingString:@"\n"];
+				indent = lastLine.length - stripped.length - 1;
+				NSArray *keywords = @[@"var", @"let", @"const", @"type"];
+
+				if ([keywords containsObject:stripped] || [stripped hasSuffix:@":"] || [stripped hasSuffix:@"="]) {
+					indent += 2;
+				}
+            } else if (self.previousText.length - self.text.length == 1) {
+                if (lastLine.length >= 1 && stripped.length == 0) {
+                    indent = -1;
+                }
+            } else if ([substringToEnter hasSuffix:@"\t"]) {
+				indent = -2;
+			}
 		}
 	} else {
 		substringToEnter = [self.text substringWithRange:self.selectedRange];
@@ -197,6 +240,17 @@
 
 	self.previousText = self.text;
 	self.previousSelectedRange = self.selectedRange;
+
+	if (indent > 0) {
+		[self insertText:[@"" stringByPaddingToLength:indent withString: @" " startingAtIndex:0]];
+    } else if (indent == -1) {
+		// backspace at the beginning of the line. Remove one additional space.
+        [self deleteBackward];
+    } else if (indent == -2) {
+		// tab. Replace with two spaces.
+		[self deleteBackward];
+		[self insertText:@"  "];
+	}
 }
 
 @end
