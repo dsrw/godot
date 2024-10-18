@@ -323,10 +323,12 @@ void PopupMenu::_gui_input(const Ref<InputEvent> &p_event) {
 	Ref<InputEventMouseButton> b = p_event;
 
 	if (b.is_valid()) {
+#ifndef IPHONE_ENABLED
+		// HACK: iOS requires a double tap to select an option. Removing this fixes it.
 		if (b->is_pressed()) {
 			return;
 		}
-
+#endif
 		int button_idx = b->get_button_index();
 		switch (button_idx) {
 			case BUTTON_WHEEL_DOWN: {
