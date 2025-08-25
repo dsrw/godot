@@ -521,7 +521,11 @@
     * <fp.h> if possible.
     */
 #    if !defined(__MATH_H__) && !defined(__MATH_H) && !defined(__cmath__)
-#      include <fp.h>
+#      if defined(__APPLE__)
+#        include <math.h>
+#      else
+#        include <fp.h>
+#      endif
 #    endif
 #  else
 #    include <math.h>
