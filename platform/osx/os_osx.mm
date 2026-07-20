@@ -39,6 +39,7 @@
 #include "drivers/gles3/rasterizer_gles3.h"
 #include "main/main.h"
 #include "servers/visual/visual_server_raster.h"
+#include "servers/visual_server.h"
 
 #include <mach-o/dyld.h>
 #include <os/log.h>
@@ -360,6 +361,13 @@ static NSCursor *cursorFromSelector(SEL selector, SEL fallback = nil) {
 	if (!OS_OSX::singleton)
 		return;
 
+	// Same GL-context race as windowDidResize: the CGL surface-backing rebind
+	// below (and setWantsBestResolutionOpenGLSurface) must not run while the
+	// threaded VisualServer is mid-blit on this context. Drain it first.
+	if (VisualServer::get_singleton()) {
+		VisualServer::get_singleton()->sync();
+	}
+
 	NSWindow *window = (NSWindow *)[notification object];
 	CGFloat newBackingScaleFactor = [window backingScaleFactor];
 	CGFloat oldBackingScaleFactor = [[[notification userInfo] objectForKey:@"NSBackingPropertyOldScaleFactorKey"] doubleValue];
@@ -404,6 +412,18 @@ static NSCursor *cursorFromSelector(SEL selector, SEL fallback = nil) {
 }
 
 - (void)windowDidResize:(NSNotification *)notification {
+	// With thread_model=2 the VisualServer runs on its own thread and may be
+	// mid-frame here, inside glBlitFramebuffer on this GL context. Reattaching
+	// the drawable below ([context update] and the CGL surface-backing calls)
+	// while that blit is in flight rebinds the surface out from under it and
+	// faults — the macOS GLES3 fullscreen/resize crash. Drain the render thread
+	// first so no GL work runs concurrently. windowDidResize is dispatched in
+	// the run loop's event phase (not the draw phase), so no new frame is queued
+	// until this returns, making the serialization total.
+	if (VisualServer::get_singleton()) {
+		VisualServer::get_singleton()->sync();
+	}
+
 	[OS_OSX::singleton->context update];
 
 	const NSRect contentRect = [OS_OSX::singleton->window_view frame];
