@@ -520,6 +520,15 @@ static NSCursor *cursorFromSelector(SEL selector, SEL fallback = nil) {
 
 @implementation GodotContentView
 
+- (BOOL)acceptsFirstMouse:(NSEvent *)event {
+	// Take a click even when AppKit thinks it's only activating the window.
+	// Launched from a terminal (or unbundled), the activation hack can leave
+	// the app half-activated: the window is key, but AppKit still treats every
+	// single click as an activating click and swallows it, so only the second
+	// click of a fast double click gets through.
+	return YES;
+}
+
 - (void)drawRect:(NSRect)dirtyRect {
 	if (OS_OSX::singleton->get_main_loop() && (OS_OSX::singleton->get_render_thread_mode() != OS::RENDER_SEPARATE_THREAD) && OS_OSX::singleton->is_resizing) {
 		Main::force_redraw();
