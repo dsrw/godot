@@ -1018,6 +1018,13 @@ void RasterizerStorageGLES3::texture_set_data_partial(RID p_texture, const Ref<I
 		}
 	}
 
+	// enu: a mipmapped 2D texture whose top level changed gets its smaller levels
+	// regenerated, as texture_set_data does, so a partial update can replace a
+	// full one without stale mipmaps.
+	if (texture->type == VS::TEXTURE_TYPE_2D && p_dst_mip == 0 && !texture->compressed && (texture->flags & VS::TEXTURE_FLAG_MIPMAPS) && !texture->ignore_mipmaps) {
+		glGenerateMipmap(texture->target);
+	}
+
 	if (texture->flags & VS::TEXTURE_FLAG_FILTER) {
 		glTexParameteri(texture->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Linear Filtering
 
