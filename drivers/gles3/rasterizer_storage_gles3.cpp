@@ -1351,6 +1351,9 @@ void RasterizerStorageGLES3::texture_set_flags(RID p_texture, uint32_t p_flags) 
 
 	if ((texture->flags & VS::TEXTURE_FLAG_MIPMAPS) && !texture->ignore_mipmaps) {
 		if (!had_mipmaps && texture->mipmaps == 1) {
+			// enu: texture_set_data capped a texture made without mipmaps at
+			// level 0, and mipmaps are only generated up to the cap.
+			glTexParameteri(texture->target, GL_TEXTURE_MAX_LEVEL, 1000);
 			glGenerateMipmap(texture->target);
 		}
 		if (texture->flags & VS::TEXTURE_FLAG_FILTER) {
